@@ -21,4 +21,19 @@ export HOST="${HOST:-0.0.0.0}"
 export PORT="${PORT:-8765}"
 export PYTHONUNBUFFERED=1
 
+# A previous managed restart can briefly leave the old Uvicorn process behind.
+# Only clear listeners that belong to this app and this configured port.
+if command -v lsof >/dev/null 2>&1; then
+  while read -r pid; do
+    [ -z "$pid" ] && continue
+    command_line="$(ps -p "$pid" -o args= 2>/dev/null || true)"
+    case "$command_line" in
+      *"$PWD"*"server.py"*)
+        kill "$pid" 2>/dev/null || true
+        ;;
+    esac
+  done < <(lsof -t -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null || true)
+  sleep 1
+fi
+
 exec "$VENV_PYTHON" server.py
