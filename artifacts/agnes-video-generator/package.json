@@ -1,0 +1,23 @@
+{
+  "name": "@workspace/agnes-video-generator",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agnes Video Generator — self-hosted AI video generation with narration, subtitles, and multi-scene workflows.",
+  "scripts": {
+    "dev": "bash ./replit-start.sh",
+    "start": "bash ./replit-start.sh"
+  },
+  "keywords": [
+    "video",
+    "ai",
+    "text-to-video",
+    "image-to-video",
+    "tts",
+    "subtitle"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lcy362/agnes-video-generator.git"
+  }
+}

@@ -1,0 +1,1 @@
+- [Artifact routing](replit-routing.md) — a scaffolded `/api` service can intercept an imported app's own `/api/*` routes unless its path is moved aside.

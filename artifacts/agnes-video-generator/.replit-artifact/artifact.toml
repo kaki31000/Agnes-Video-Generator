@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Agnes Video Generator"
+description = "A self-hosted AI video generator with a FastAPI service and Vue web interface. Configure an Agnes AI key, create multi-scene videos, add narration and subtitles, and manage generated media from one workspace."
+version = "1.0.0"
+id = "artifacts/agnes-video-generator"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19206
+
+[services.development]
+run = "pnpm --filter @workspace/agnes-video-generator run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/agnes-video-generator", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/agnes-video-generator/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19206"
+BASE_PATH = "/"

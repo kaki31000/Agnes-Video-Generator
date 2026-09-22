@@ -1,0 +1,2 @@
+.conversation/agnes-video-generator/resource/fonts/STHeitiMedium.ttc filter=lfs diff=lfs merge=lfs -text
+artifacts/agnes-video-generator/resource/fonts/STHeitiMedium.ttc filter=lfs diff=lfs merge=lfs -text
