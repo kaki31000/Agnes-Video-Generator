@@ -1,4 +1,4 @@
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { appState } from '@/store'
 import * as api from '@/api'
 import { t, currentLang } from '@/i18n'
@@ -15,7 +15,39 @@ export const voiceSelections = reactive<Record<string, string>>({
   m: 'zh-CN-XiaoxiaoNeural',
   a: 'zh-CN-XiaoxiaoNeural',
   p: 'zh-CN-XiaoxiaoNeural',
+  s: 'zh-CN-XiaoxiaoNeural',
 })
+
+// These are only used until the remote voice catalog is loaded. Once it is
+// available, the first voice for the active UI language is preferred.
+const DEFAULT_VOICE_BY_LANG: Record<string, string> = {
+  zh: 'zh-CN-XiaoxiaoNeural',
+  en: 'en-US-AriaNeural',
+  fr: 'fr-FR-DeniseNeural',
+  de: 'de-DE-KatjaNeural',
+  es: 'es-ES-ElviraNeural',
+  it: 'it-IT-ElsaNeural',
+  pt: 'pt-BR-FranciscaNeural',
+  nl: 'nl-NL-ColetteNeural',
+  ru: 'ru-RU-SvetlanaNeural',
+  ja: 'ja-JP-NanamiNeural',
+  ko: 'ko-KR-SunHiNeural',
+  ar: 'ar-SA-ZariyahNeural',
+  hi: 'hi-IN-SwaraNeural',
+  tr: 'tr-TR-EmelNeural',
+  vi: 'vi-VN-HoaiMyNeural',
+  id: 'id-ID-GadisNeural',
+  ms: 'ms-MY-YunaNeural',
+  th: 'th-TH-PremwadeeNeural',
+  fa: 'fa-IR-DilaraNeural',
+  bn: 'bn-IN-TanishaaNeural',
+  tl: 'fil-PH-AngeloNeural',
+  ur: 'ur-PK-UzmaNeural',
+}
+
+// Keep deliberate user choices intact. Only selections that were supplied by
+// the app as defaults are changed when the UI language changes.
+const autoDefaultTasks = new Set(Object.keys(voiceSelections))
 
 // picker 弹窗状态
 const pickerVisible = ref(false)
@@ -30,6 +62,26 @@ const playingId = ref<string | null>(null)
 
 const voiceIndex = computed(() => appState.voiceIndex)
 
+function preferredVoiceId(lang: string): string {
+  const group = appState.voiceCatalog?.languages?.find((item) => item.code === lang)
+  const voices = group?.voices || []
+  return (
+    voices.find((voice: Voice) => voice.gender === 'female')?.id ||
+    voices[0]?.id ||
+    DEFAULT_VOICE_BY_LANG[lang] ||
+    DEFAULT_VOICE_BY_LANG.en
+  )
+}
+
+function syncAutoVoiceDefaults(lang: string) {
+  const voiceId = preferredVoiceId(lang)
+  autoDefaultTasks.forEach((task) => {
+    voiceSelections[task] = voiceId
+  })
+}
+
+watch(currentLang, (lang) => syncAutoVoiceDefaults(lang), { immediate: true })
+
 async function initVoiceSelector() {
   try {
     const catalog = await api.getVoices()
@@ -39,6 +91,7 @@ async function initVoiceSelector() {
         appState.voiceIndex[v.id] = v
       }),
     )
+    syncAutoVoiceDefaults(currentLang.value)
   } catch (e) {
     console.error('load voices failed:', e)
     appState.voiceCatalog = { languages: [], compat_hint: {} }
@@ -173,6 +226,7 @@ async function confirmVoiceSelection() {
     const ok = await confirmAsync(t('voiceCompatWarning'))
     if (!ok) return
   }
+  autoDefaultTasks.delete(pickerTask.value)
   voiceSelections[pickerTask.value] = selectedId.value
   closeVoicePicker()
 }
